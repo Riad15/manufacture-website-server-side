@@ -20,8 +20,9 @@ async function run() {
     try {
         await client.connect();
         const allProducts = client.db('computer_accessories').collection('Products');
+        const myProducts = client.db('computer_accessories').collection('my-products');
 
-        // find all products
+        // find all products from allProducts
         app.get('/products', async (req, res) => {
             const query = {};
             const cursor = allProducts.find(query);
@@ -30,13 +31,40 @@ async function run() {
 
         });
 
-        // find one products
+        // find one products 
         app.get('/products/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) }
             const product = await allProducts.findOne(query);
             res.send(product);
         });
+
+        // insert one for add to card data
+        app.put('/my-product', async (req, res) => {
+            const addToCartProduct = req.body;
+
+            const result = await myProducts.insertOne(addToCartProduct);
+            res.send(result);
+        })
+
+        // find all products from myProducts
+        app.get('/my-products', async (req, res) => {
+            const query = {};
+            const cursor = myProducts.find(query);
+            const products = await cursor.toArray();
+            res.send(products);
+
+        });
+
+        // delete a item from myProducts
+        app.delete('/my-products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await serviceCollection.deleteOne(query);
+            res.send(result);
+
+        })
+
 
 
     } finally {

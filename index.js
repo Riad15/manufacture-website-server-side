@@ -60,7 +60,7 @@ async function run() {
         app.delete('/my-products/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
-            const result = await serviceCollection.deleteOne(query);
+            const result = await myProducts.deleteOne(query);
             res.send(result);
 
         })

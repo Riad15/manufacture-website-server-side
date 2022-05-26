@@ -52,6 +52,7 @@ async function run() {
         await client.connect();
         const allProducts = client.db('computer_accessories').collection('Products');
         const myProducts = client.db('computer_accessories').collection('my-products');
+        const allUsers = client.db('computer_accessories').collection('users');
 
         // find all products from allProducts
         app.get('/products', async (req, res) => {
@@ -62,6 +63,21 @@ async function run() {
 
         });
 
+        // update user information
+        app.put('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await movies.updateOne(filter, updateDoc, options);
+            res.send(result);
+
+        })
+
+
         // find one products 
         app.get('/products/:id', async (req, res) => {
             const id = req.params.id;
@@ -71,7 +87,7 @@ async function run() {
         });
 
         // insert one for add to card data
-        app.put('/my-product', async (req, res) => {
+        app.put('/my-products', async (req, res) => {
             const addToCartProduct = req.body;
 
             const result = await myProducts.insertOne(addToCartProduct);
@@ -100,8 +116,8 @@ async function run() {
 
         app.post('/create-payment-intent', async (req, res) => {
             const myItem = req.body;
-            const price = myItem.price;
-            const amount = price * 100;
+            const price = myItem.total_price;
+            const amount = parseFloat(price) * 100;
 
             // Create a PaymentIntent with the order amount and currency
             const paymentIntent = await stripe.paymentIntents.create({

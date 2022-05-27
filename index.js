@@ -38,11 +38,21 @@ async function run() {
         const allProducts = client.db('computer_accessories').collection('Products');
         const myProducts = client.db('computer_accessories').collection('my-products');
         const allUsers = client.db('computer_accessories').collection('users');
+        const allReview = client.db('computer_accessories').collection('review');
 
         // find all products from allProducts
         app.get('/products', async (req, res) => {
             const query = {};
             const cursor = allProducts.find(query);
+            const products = await cursor.toArray();
+            res.send(products);
+
+        });
+
+        // find all review from allReview
+        app.get('/review', async (req, res) => {
+            const query = {};
+            const cursor = allReview.find(query);
             const products = await cursor.toArray();
             res.send(products);
 
@@ -60,6 +70,22 @@ async function run() {
             const result = await allUsers.updateOne(filter, updateDoc, options);
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, { expiresIn: '20h' })
             res.send({ result, token });
+
+        })
+        app.get('/users', async (req, res) => {
+            const query = {};
+            const cursor = allUsers.find(query);
+            const users = await cursor.toArray();
+            res.send(users);
+
+        })
+
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = await allUsers.findOne({
+                email: email
+            });
+            res.send(user);
 
         })
 

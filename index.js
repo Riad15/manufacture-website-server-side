@@ -5,35 +5,7 @@ require('dotenv').config();
 
 const stripe = require("stripe")(process.env.STRIPE_KEY);
 
-// app.use(express.static("public"));
-// app.use(express.json());
 
-// const calculateOrderAmount = (items) => {
-//     // Replace this constant with a calculation of the order's amount
-//     // Calculate the order total on the server to prevent
-//     // people from directly manipulating the amount on the client
-//     return 1400;
-// };
-
-// app.post("/create-payment-intent", async (req, res) => {
-//     const { items } = req.body;
-
-//     // Create a PaymentIntent with the order amount and currency
-//     const paymentIntent = await stripe.paymentIntents.create({
-//         amount: calculateOrderAmount(items),
-//         currency: "eur",
-//         automatic_payment_methods: {
-//             enabled: true,
-//         },
-//     });
-
-//     res.send({
-//         clientSecret: paymentIntent.client_secret,
-//     });
-// });
-
-// app.listen(4242, () => console.log("Node server listening on port 4242!"));
-// const { get } = require('express/lib/response');
 const app = express()
 const port = process.env.PORT || 5000
 
@@ -47,6 +19,19 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.jex3yne.mongodb.net/?retryWrites=true&w=majority`;
 console.log(uri);
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+function verifyJWT(req, res, next) {
+    if (!authHeader) {
+        return res.status(401).send({ message: 'UnAuthorized access' });
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden access' })
+        }
+        req.decoded = decoded;
+        next();
+    });
+}
 async function run() {
     try {
         await client.connect();
@@ -72,8 +57,9 @@ async function run() {
             const updateDoc = {
                 $set: user,
             };
-            const result = await movies.updateOne(filter, updateDoc, options);
-            res.send(result);
+            const result = await allUsers.updateOne(filter, updateDoc, options);
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, { expiresIn: '20h' })
+            res.send({ result, token });
 
         })
 
